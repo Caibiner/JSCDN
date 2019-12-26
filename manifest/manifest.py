@@ -7,8 +7,6 @@ Desc: Webp convertor
 import os
 import sys
 import json
-import requests
-import base64
 import hashlib
 from PIL import Image
 
@@ -50,52 +48,24 @@ class Single(object):
     self.manifest()
     return self.mani
 
-
-class Upload2Wordpress(object):
-  def __init__(self, username, password, url):
-    self.username = username
-    self.password = password
-    self.url = url
-
-  def upload(self, file, field):
-    data_string = self.username + ':' + self.password
-    token = base64.b64encode(data_string.encode()).decode('utf-8')
-    headers = {
-      'Authorization': 'Basic ' + token,
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97"
-    }
-    files = {field: open(file, mode="rb")}
-    reply = requests.post(self.url, headers=headers, files=files)
-    print('-----------------------------------------------------')
-    print(reply.content)
-    print('------------------------------------------------------')
-    print(json.loads(reply.content)['message'])
-    print('-----------------------------------------------------')
-  def main(self):
-    print('start uploading `manifest.json`...')
-    self.upload('manifest.json', 'manifest')
-
-
 def gen_manifest_json():
   onlyfiles = [f for f in os.listdir('gallary') if os.path.isfile(os.path.join('gallary', f))]
   id = 1
   Manifest = {}
   for f in onlyfiles:
-    worker = Single(f, Manifest)
-    Manifest = worker.main()
-    print(str(id) + '/' + str(len(onlyfiles)))
-    id += 1
+    try:
+      worker = Single(f, Manifest)
+      Manifest = worker.main()
+      print(str(id) + '/' + str(len(onlyfiles)))
+      id += 1
+    except OSError:
+      print("Falied to optimize the picture: " + f)
   with open('manifest.json', 'w+') as json_file:
     json.dump(Manifest, json_file)
 
 
 def main():
   gen_manifest_json()
-  username ='878720860'
-  password = '3yuedeshizi'
-  url = 'https://sakura.2heng.xin/wp-json/sakura/v1/database/update'
-  upload = Upload2Wordpress(username, password, url)
-  upload.main()
 
 
 if __name__ == '__main__':
